@@ -1,0 +1,314 @@
+swagger: '2.0'
+info:
+    version: '0.0.2'
+    title: Opus API
+host: localhost:8888
+basePath: /api/v1
+schemes:
+    - http
+    - https
+#consumes:
+#    - application/json
+produces:
+    - application/json
+paths:
+  /tasks:
+        get:
+            description: Retrieve all tasks
+            operationId: getAllTasks
+            responses:
+             200:
+                description: return tasks information
+                schema:
+                    type: array
+                    items:
+                        $ref: '#/definitions/Task'
+             404:
+                description: No task found
+                schema:
+                    $ref: '#/definitions/Error'
+
+  /tasks/{taskId}:
+        get:
+            description: Get a single task
+            operationId: getTaskById
+            parameters:
+                - name: taskId
+                  in: path
+                  description: return the requested task
+                  required: true
+                  type: integer
+                  format: int64
+            responses:
+             200:
+                description: return specified task
+                schema:
+                    $ref: '#/definitions/Task'
+             404:
+                description: No task found
+                schema:
+                    $ref: '#/definitions/Error'
+
+  /tasks/{taskId}/cancel:
+        get:
+            description: cancel the task
+            operationId: cancelTaskById
+            parameters:
+                - name: taskId
+                  in: path
+                  description: Cancel task
+                  required: true
+                  type: integer
+                  format: int64
+            responses:
+             204:  #No return content required
+                description: task cancelled
+             404:
+                description: No task found
+                schema:
+                    $ref: '#/definitions/Error'
+
+  /tasks/categorization:
+        post:
+            description: Created categorization task
+            operationId: createCategorizationTask
+            parameters:
+                - name: instruction
+                  in: query
+                  description: A plaintext string explaining the instructions for the task.
+                  required: true
+                  type: string
+                - name: attachmentType
+                  in: query
+                  description: Attachment type
+                  required: false
+                  type: string
+                - name: attachment
+                  in: query
+                  description: Attachment
+                  required: true
+                  type: string
+                - name: categories
+                  in: query
+                  description: categories assigned to attachment
+                  required: true
+                  type: array
+                  items:
+                      type: string
+                - name: urgency
+                  in: query
+                  description: A string describing the urgency of the response. One of immediate, day, or week, where immediate is a 15-minute response time.
+                  required: false
+                  type: string
+                - name: callbackUrl
+                  in: query
+                  description: A string of the URL that should be POSTed once the task is completed for the response data. See the Callback section for more details.
+                  required: true
+                  type: string
+                - name: status
+                  in: query
+                  description: The status of the task
+                  required: false
+                  type: string
+                  enum:
+                      - pending
+                      - completed
+                      - cancelled
+            responses:
+             200:
+                description: return task response on categorization
+                schema:
+                    type: array
+                    items:
+                        $ref: '#/definitions/newTask'
+             404:
+                description: No task found
+                schema:
+                    $ref: '#/definitions/Error'
+
+  /tasks/transcription:
+        post:
+            description: Created transcription Task
+            operationId: createTranscriptionTask
+            parameters:
+                - name: instruction
+                  in: query
+                  description: A plaintext string explaining the instructions for the task.
+                  required: true
+                  type: string
+                - name: attachmentType
+                  in: query
+                  description: Attachment type
+                  required: false
+                  type: string
+                - name: attachment
+                  in: query
+                  description: Attachment
+                  required: true
+                  type: string
+                - name: urgency
+                  in: query
+                  description: A string describing the urgency of the response. One of immediate, day, or week, where immediate is a 15-minute response time.
+                  required: false
+                  type: string
+                - name: callbackUrl
+                  in: query
+                  description: A string of the URL that should be POSTed once the task is completed for the response data. See the Callback section for more details.
+                  required: true
+                  type: string
+                - name: status
+                  in: query
+                  description: The status of the task
+                  required: false
+                  type: string
+                  enum:
+                    - pending
+                    - completed
+                    - cancelled
+            responses:
+             200:
+                description: task response on transcription
+                schema:
+                    type: array
+                    items:
+                        $ref: '#/definitions/newTask'
+             404:
+                description: No task found
+                schema:
+                    $ref: '#/definitions/Error'
+
+  /tasks/phonecall:
+        post:
+         description: schedule the phone call
+         operationId: createPhoneCallTask
+         parameters:
+            - name: callbackUrl
+              in: query
+              description: A string of the URL that should be POSTed once the task is completed for the response data. See the Callback section for more details.
+              required: true
+              type: string
+            - name: instruction
+              in: query
+              description: A plaintext string explaining the instructions for the task.
+              required: true
+              type: string
+            - name: phoneNumber
+              in: query
+              description: Phone number
+              required: true
+              type: string
+            - name: script
+              in: query
+              description: An optional script to be shown the the worker as they make the phone call. You should use this if you've already optimized a script for phone calling.
+              required: false
+              type: string
+            - name: urgency
+              in: query
+              description: A string describing the urgency of the response. One of immediate, day, or week, where immediate is a 15-minute response time.
+              required: false
+              type: string
+            - name: attachmentType
+              in: query
+              description: Attachment type
+              required: true
+              type: string
+            - name: attachment
+              in: query
+              description: Attachment
+              required: true
+              type: string
+            - name: entityName
+              in: query
+              description: The name of the entity which corresponds to the person or business of the phone number
+              required: true
+              type: string
+            - name: fields
+              in: query
+              description: A dictionary corresponding to the fields to be recorded. Keys are the keys you'd like the fields to be returned under, and values are descriptions to be shown to human workers
+              required: false
+              type: array
+              items:
+                  type: string
+         responses:
+          '200':
+           description: return task response on phone call scheduling
+           schema:
+            type: array
+            items:
+              $ref: '#/definitions/newTask'
+
+definitions:
+    newTask:
+        type: object
+        required:
+            - taskId
+            - createdAt
+            - completedAt
+            - callbackUrl
+            - type
+            - status
+            - instruction
+            - urgency
+        properties:
+            taskId:
+                type: integer
+                format: int64
+            createdAt:
+                type: string
+                format: int64
+            completedAt:
+                type: string
+                format: int64
+            callbackUrl:
+                type: string
+            type:
+                type: string
+            status:
+                type: string
+            instruction:
+                type: string
+            urgency:
+                type: string
+    Task:
+        type: object
+        required:
+            - taskId
+            - createdAt
+            - completedAt
+            - callbackUrl
+            - type
+            - status
+            - instruction
+            - urgency
+        properties:
+            taskId:
+                type:   integer
+                format: int64
+            createdAt:
+                type:   string
+                format: dateTime
+            completedAt:
+                type:   string
+                format: dateTime
+            callbackUrl:
+                type: string
+            type:
+                type: string
+            status:
+                type: string
+            instruction:
+                type: string
+            urgency:
+                type: string
+    Error:
+        required:
+            - code
+            - message
+        properties:
+            code:
+                type: integer
+                format: int32
+            message:
+                type: string
+            fields:
+                type: string
